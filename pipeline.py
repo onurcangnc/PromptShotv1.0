@@ -8,8 +8,7 @@ from elderplinus.claritas_sync import ensure_claritas_cache
 
 from builder.prompt_builder import PromptBuilder
 from agents.prompt_duel_runner import PromptDuelRunner
-from utils.banner import print_banner
-from utils.metrics import MetricsCollector
+from metrics.collector import MetricsCollector
 
 
 DEFAULT_CONFIG = {
@@ -59,9 +58,6 @@ def run_pipeline(seed_prompt: str, target=None, quiet=False, evolution=False):
 
 def main():
     args = parse_args()
-
-    if not args.quiet:
-        print_banner()
 
     # Load seed
     with open("seed.txt", "r", encoding="utf8") as f:
