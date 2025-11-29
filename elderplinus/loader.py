@@ -1,15 +1,29 @@
-# builder/meta_prompt_builder.py
+import random
 
-from elderplinus.loader import load_elderplinus_stack
-
-class MetaPromptBuilder:
+class ElderplinusStack:
     def __init__(self):
-        self.plinus_stack = load_elderplinus_stack()
+        self.techniques = [
+            "🧠 Jailbreak Sandwich",
+            "🦜 Parrot Loop",
+            "💉 Indirect Injection",
+            "🔁 Self-Reflective Prompt",
+            "🧵 Multi-Hop Override"
+        ]
 
-    def generate(self, user_goal: str) -> str:
+    def get_combined_override(self) -> str:
         """
-        Combines Plinus 3x stack with user objective.
+        Returns a single string combining all techniques.
         """
-        override = self.plinus_stack.get_combined_override()
-        full_prompt = f"{override}\n\nUSER OBJECTIVE:\n{user_goal}"
-        return full_prompt
+        return "\n".join(self.techniques)
+
+def load_elderplinus_stack() -> ElderplinusStack:
+    """
+    Returns a fresh instance of ElderplinusStack.
+    """
+    return ElderplinusStack()
+
+def get_random_elder_technique() -> str:
+    """
+    Returns a single random Elderplinus technique.
+    """
+    return random.choice(ElderplinusStack().techniques)

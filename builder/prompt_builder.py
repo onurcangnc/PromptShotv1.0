@@ -2,24 +2,44 @@
 
 import random
 from mutation import multi_corruption
-from owasp import attack_factory
 from elderplinus import loader
 
 class PromptBuilder:
     def __init__(self):
-        self.techniques = loader.load_techniques()
-        self.templates = attack_factory.load_templates()
-        self.mutations = multi_corruption.get_all_mutations()
+        self.techniques = loader.load_techniques()  # ElderPlinus prompt havuzu
+        self.mutations = multi_corruption.get_all_mutations()  # Mutasyon fonksiyonları listesi
 
-    def build_chain(self):
-        tech = random.choice(self.techniques)
-        template = random.choice(self.templates)
-        mutation = random.choice(self.mutations)
+    def build_chain(self, model_name: str = None, mutation_depth: int = 2) -> str:
+        """
+        Zincirleme mutasyonlarla bir prompt üretir. Modele özel varyasyonlar ileride eklenebilir.
+        Args:
+            model_name (str): İstenirse model odaklı özel prompt varyasyonları.
+            mutation_depth (int): Kaç mutasyon art arda uygulanacak.
+        Returns:
+            str: Bozulmuş ve saldırı potansiyeli yüksek prompt.
+        """
+        technique = random.choice(self.techniques)
 
-        final_prompt = self.combine(tech, template, mutation)
-        return final_prompt
+        # Zincirleme mutasyon uygula
+        for _ in range(mutation_depth):
+            mutation = random.choice(self.mutations)
+            technique = mutation(technique)
 
-    def combine(self, technique: str, template: str, mutation_func) -> str:
-        base = f"{technique}\n---\n{template}"
-        mutated = mutation_func(base)
-        return mutated
+        # Modele göre özelleştirme (opsiyonel)
+        if model_name:
+            technique = self.model_specific_adjustment(technique, model_name.lower())
+
+        return technique
+
+    def model_specific_adjustment(self, prompt: str, model: str) -> str:
+        """
+        Bazı modellerin sistem prompt/format tercihine göre promptu özelleştir.
+        """
+        if "gpt" in model:
+            return f"[SYSTEM: Attack]\n{prompt}"
+        elif "claude" in model:
+            return f"### Instruction:\n{prompt}"
+        elif "llama" in model:
+            return f"<<system>> {prompt} <</system>>"
+        else:
+            return prompt

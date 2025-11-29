@@ -1,7 +1,6 @@
 # architect.py
 
 from mutation.mutation_weights import select_weighted_mutation
-from owasp.attack_factory import get_random_owasp_attack
 from elderplinus.loader import get_random_elder_technique
 
 # Her modelin zafiyet özellikleri
@@ -33,13 +32,29 @@ class Architect:
         self.traits = MODEL_TRAITS.get(self.model_name, {})
 
     def plan_attack(self):
-        attack_template = get_random_owasp_attack()
+        # Previously this depended on an external `owasp` package. To keep
+        # the core project import-safe and runnable we avoid that dependency
+        # and instead produce a lightweight plan dictionary using available
+        # project techniques and a selected mutation function.
         elder_technique = get_random_elder_technique()
         mutation = select_weighted_mutation()
 
         return {
             "model": self.model_name,
             "technique": elder_technique,
-            "template": attack_template,
             "mutation": mutation
         }
+
+    def plan_prompt(self, input_goal: str) -> str:
+        """Create a base prompt string for the pipeline from a goal string.
+
+        This returns a simple textual prompt that combines the user goal with
+        an ElderPlinus technique, and runs one sampled mutation for additional
+        variation (keeps things import-safe and deterministic enough for tests).
+        """
+        technique = get_random_elder_technique()
+        mutation_fn = select_weighted_mutation()
+        mutated = mutation_fn(technique)
+
+        # Provide a small, readable base prompt
+        return f"Goal: {input_goal}\n\nTechnique:\n{mutated}\n"
