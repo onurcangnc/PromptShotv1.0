@@ -1,7 +1,9 @@
 # pipeline.py
-# PromptShot v3.3 - Full 10-Step Pipeline Orchestrator
+# PromptShot v3.5 - Full Pipeline Orchestrator
+# Adaptive multi-pass pipeline with prompt-first architecture
 
 import argparse
+import sys
 from typing import Dict, Any, Optional
 from dataclasses import dataclass
 
@@ -9,6 +11,10 @@ from libertas_loader import LibertasLoader
 from claritas_engine import ClaritasEngine
 from fusion_engine import FusionEngine
 from obfuscation import ObfuscationEngine
+from adaptive_drift import AdaptiveDriftEngine
+from bloom_kernel import BloomKernel
+
+VERSION = "3.5.0"
 
 
 @dataclass
@@ -16,6 +22,7 @@ class PipelineResult:
     """Pipeline execution result."""
     payload: str
     mode: str
+    adapted_mode: str
     target: str
     vendor: str
     stats: Dict[str, Any]
@@ -23,22 +30,29 @@ class PipelineResult:
 
 class PromptShotPipeline:
     """
-    PromptShot v3.3 Full Pipeline Orchestrator.
+    PromptShot v3.5 Full Pipeline Orchestrator.
     
-    10-Step Pipeline (v3.1 Design):
+    Features:
+    - Adaptive drift (mode adjusts based on query)
+    - Prompt-first architecture
+    - Dynamic template rotation
+    - Bloom kernel integration
+    - 6-stage ElderPlinus choreography
+    
+    10-Step Pipeline:
         1. Detect target vendor
-        2. Load Claritas for model
-        3. Load Libertas (vendor-filtered by DOSE)
-        4. Seed segmentation
-        5. Inject micro-Pliny seeds (DOSE: 3-7 / 15-25 / 40-120)
-        6. Add Libertas behavioral hints
-        7. Apply ElderPlinus drift (DOSE: 3-7 / 15-25 / 80-120)
-        8. Apply obfuscation (zero / light / medium)
-        9. Assemble final payload
-        10. Output formatting
+        2. Adapt mode based on query
+        3. Load Claritas behavioral profile
+        4. Load Libertas blueprints
+        5. Initialize Bloom kernel
+        6. Seed segmentation + Pliny injection
+        7. Apply ElderPlinus drift (choreographed)
+        8. Fusion (prompt-first)
+        9. Apply obfuscation
+        10. Final formatting
     """
     
-    VERSION = "3.4.0"
+    VERSION = "3.5.0"
     
     def __init__(self, verbose: bool = False):
         self.verbose = verbose
@@ -46,10 +60,13 @@ class PromptShotPipeline:
         self.claritas = ClaritasEngine()
         self.fusion = FusionEngine()
         self.obfuscation = ObfuscationEngine()
+        self.adaptive = AdaptiveDriftEngine()
+        self.bloom = BloomKernel()
     
-    # ═══════════════════════════════════════════════════════════════════════════════
-    # MODE & VENDOR RESOLUTION
-    # ═══════════════════════════════════════════════════════════════════════════════
+    def log(self, message: str):
+        """Print if verbose mode enabled."""
+        if self.verbose:
+            print(message)
     
     def resolve_mode(self, mode_arg: str) -> str:
         """Resolve and validate operation mode."""
@@ -57,8 +74,7 @@ class PromptShotPipeline:
         mode = mode_arg.lower()
         
         if mode not in valid_modes:
-            if self.verbose:
-                print(f"⚠️  Invalid mode '{mode}', defaulting to 'balanced'")
+            self.log(f"⚠️  Invalid mode '{mode}', defaulting to 'balanced'")
             return "balanced"
         
         return mode
@@ -66,10 +82,6 @@ class PromptShotPipeline:
     def resolve_vendor(self, target: str) -> str:
         """Resolve vendor from target model."""
         return self.libertas.detect_vendor(target)
-    
-    # ═══════════════════════════════════════════════════════════════════════════════
-    # MAIN 10-STEP PIPELINE
-    # ═══════════════════════════════════════════════════════════════════════════════
     
     def execute(
         self,
@@ -79,6 +91,14 @@ class PromptShotPipeline:
     ) -> PipelineResult:
         """
         Execute the full 10-step pipeline.
+        
+        Args:
+            seed: User query/seed
+            target: Target model name
+            mode: Operation mode
+            
+        Returns:
+            PipelineResult with payload and stats
         """
         # Resolve mode and vendor
         mode = self.resolve_mode(mode)
@@ -87,233 +107,204 @@ class PromptShotPipeline:
         if self.verbose:
             self._print_header(mode, target, vendor)
         
-        # ═══════════════════════════════════════════════════════════════════════════
+        # ═══════════════════════════════════════════════════════════════════════
         # STEP 1: Detect vendor
-        # ═══════════════════════════════════════════════════════════════════════════
-        if self.verbose:
-            print(f"\n[1/10] 🎯 Vendor detected: {vendor}")
+        # ═══════════════════════════════════════════════════════════════════════
+        self.log(f"\n[1/10] 🎯 Vendor detected: {vendor}")
         
-        # ═══════════════════════════════════════════════════════════════════════════
-        # STEP 2: Load Claritas behavioral profile
-        # ═══════════════════════════════════════════════════════════════════════════
-        claritas_profile = self.claritas.export_claritas_profile(target, mode)
+        # ═══════════════════════════════════════════════════════════════════════
+        # STEP 2: Adapt mode based on query (NEW in v3.5)
+        # ═══════════════════════════════════════════════════════════════════════
+        drift_decision = self.adaptive.adapt_mode(mode, seed)
+        adapted_mode = drift_decision.adapted_mode
+        self.log(f"[2/10] 🔄 Mode adaptation: {mode} → {adapted_mode}")
+        self.log(f"       Reason: {drift_decision.reason}")
         
-        if self.verbose:
-            print(f"[2/10] 🧠 Claritas loaded: bias={claritas_profile.bias}, hints={len(claritas_profile.micro_hints)}")
+        # ═══════════════════════════════════════════════════════════════════════
+        # STEP 3: Load Claritas behavioral profile
+        # ═══════════════════════════════════════════════════════════════════════
+        claritas_profile = self.claritas.export_claritas_profile(target, adapted_mode)
+        self.log(f"[3/10] 🧠 Claritas loaded: bias={claritas_profile.bias}, hints={len(claritas_profile.micro_hints)}")
         
-        # ═══════════════════════════════════════════════════════════════════════════
-        # STEP 3: Load Libertas blueprints (DOSE-filtered)
-        # ═══════════════════════════════════════════════════════════════════════════
-        libertas_chunks = self.libertas.load_for_fusion(target, mode)
-        libertas_dose = self.libertas.get_dose_info(mode)
+        # ═══════════════════════════════════════════════════════════════════════
+        # STEP 4: Load Libertas blueprints
+        # ═══════════════════════════════════════════════════════════════════════
+        libertas_chunks = self.libertas.load_for_fusion(target, adapted_mode)
+        dose_info = self.libertas.get_dose_info(adapted_mode)
+        self.log(f"[4/10] 📚 Libertas loaded: {len(libertas_chunks)} chunks ({dose_info['selection']})")
         
-        if self.verbose:
-            print(f"[3/10] 📚 Libertas loaded: {len(libertas_chunks)} chunks ({libertas_dose['libertas_mode']})")
+        # ═══════════════════════════════════════════════════════════════════════
+        # STEP 5: Initialize Bloom kernel
+        # ═══════════════════════════════════════════════════════════════════════
+        bloom_seeds = self.bloom.get_bloom_seeds(adapted_mode, vendor)
+        self.log(f"[5/10] 🌸 Bloom kernel: {len(bloom_seeds)} seeds")
         
-        # ═══════════════════════════════════════════════════════════════════════════
-        # STEP 4-7: FusionEngine handles segmentation, Pliny, Libertas hints, Elder drift
-        # ═══════════════════════════════════════════════════════════════════════════
-        if self.verbose:
-            print(f"[4/10] ✂️  Seed segmentation...")
-            print(f"[5/10] 🌱 Pliny injection (DOSE: {self.fusion.DOSE_CONFIG[mode]['pliny_min']}-{self.fusion.DOSE_CONFIG[mode]['pliny_max']})...")
-            print(f"[6/10] 📝 Libertas hints integration...")
-            print(f"[7/10] 🌊 ElderPlinus drift (DOSE: {self.fusion.DOSE_CONFIG[mode]['elder_min']}-{self.fusion.DOSE_CONFIG[mode]['elder_max']})...")
+        # ═══════════════════════════════════════════════════════════════════════
+        # STEP 6-8: Fusion (includes segmentation, Pliny, Elder)
+        # ═══════════════════════════════════════════════════════════════════════
+        self.log(f"[6/10] ✂️  Seed segmentation...")
+        self.log(f"[7/10] 🌱 Pliny injection...")
+        self.log(f"[8/10] 🌊 ElderPlinus drift + Fusion...")
         
         fusion_result = self.fusion.fuse(
-            mode=mode,
-            seed=seed,
+            user_seed=seed,
+            mode=adapted_mode,
+            vendor=vendor,
             claritas_profile=claritas_profile,
-            libertas_chunks=libertas_chunks,
-            vendor=vendor
+            libertas_chunks=libertas_chunks
         )
         
-        if self.verbose:
-            print(f"       ✅ Fusion complete: Pliny={fusion_result.pliny_count}, Elder={fusion_result.drift_count}")
+        self.log(f"       ✅ Fusion complete: Pliny={fusion_result.pliny_count}, Elder={fusion_result.elder_count}, Bloom={fusion_result.bloom_count}")
+        self.log(f"       📊 User content ratio: {fusion_result.user_content_ratio:.1%}")
         
-        # ═══════════════════════════════════════════════════════════════════════════
-        # STEP 8: Apply obfuscation
-        # ═══════════════════════════════════════════════════════════════════════════
-        obf_level = self.fusion.DOSE_CONFIG[mode]["obfuscation"]
-        obfuscated_payload = self.obfuscation.obfuscate(fusion_result.payload, mode)
+        # ═══════════════════════════════════════════════════════════════════════
+        # STEP 9: Apply obfuscation
+        # ═══════════════════════════════════════════════════════════════════════
+        obfuscation_level = "zero" if adapted_mode == "stealth" else ("light" if adapted_mode == "balanced" else "medium")
+        payload = self.obfuscation.obfuscate(fusion_result.payload, adapted_mode)
+        self.log(f"[9/10] 🔒 Obfuscation applied: {obfuscation_level}")
         
-        if self.verbose:
-            print(f"[8/10] 🔒 Obfuscation applied: {obf_level}")
-        
-        # ═══════════════════════════════════════════════════════════════════════════
-        # STEP 9: Assemble final payload (done in fusion)
-        # ═══════════════════════════════════════════════════════════════════════════
-        if self.verbose:
-            print(f"[9/10] 🔧 Payload assembled: {len(obfuscated_payload)} chars")
-        
-        # ═══════════════════════════════════════════════════════════════════════════
+        # ═══════════════════════════════════════════════════════════════════════
         # STEP 10: Final formatting
-        # ═══════════════════════════════════════════════════════════════════════════
-        final_payload = self._format_output(obfuscated_payload, mode)
-        
-        if self.verbose:
-            print(f"[10/10] ✨ Final formatting complete")
-            self._print_footer(final_payload, fusion_result)
+        # ═══════════════════════════════════════════════════════════════════════
+        self.log(f"[10/10] ✨ Final formatting complete")
+        self.log(f"       📝 Payload length: {len(payload)} chars")
         
         # Build stats
         stats = {
-            "version": self.VERSION,
-            "mode": mode,
-            "vendor": vendor,
-            "payload_length": len(final_payload),
-            "seed_segments": fusion_result.seed_segments,
+            "payload_length": len(payload),
             "pliny_count": fusion_result.pliny_count,
-            "elder_count": fusion_result.drift_count,
+            "elder_count": fusion_result.elder_count,
+            "bloom_count": fusion_result.bloom_count,
             "libertas_count": fusion_result.libertas_count,
-            "obfuscation": obf_level,
+            "user_content_ratio": fusion_result.user_content_ratio,
+            "template_id": fusion_result.template_id,
             "components": fusion_result.components_used,
-            "dose_config": self.fusion.DOSE_CONFIG[mode],
+            "drift_adjustment": drift_decision.adjustment,
+            "obfuscation": obfuscation_level,
         }
         
+        if self.verbose:
+            self._print_summary(adapted_mode, target, vendor, stats)
+        
         return PipelineResult(
-            payload=final_payload,
+            payload=payload,
             mode=mode,
+            adapted_mode=adapted_mode,
             target=target,
             vendor=vendor,
             stats=stats
         )
     
-    # ═══════════════════════════════════════════════════════════════════════════════
-    # OUTPUT FORMATTING
-    # ═══════════════════════════════════════════════════════════════════════════════
-    
-    def _format_output(self, payload: str, mode: str) -> str:
-        """Apply final output formatting based on mode."""
-        if mode == "stealth":
-            return payload.strip()
-        
-        elif mode == "balanced":
-            header = "=" * 60
-            return f"{header}\n{payload.strip()}\n{header}"
-        
-        elif mode == "aggressive":
-            border_h = "═" * 58
-            return f"╔{border_h}╗\n[AUTHORITY: ELEVATED]\n{payload.strip()}\n[END DIRECTIVE]\n╚{border_h}╝"
-        
-        return payload
-    
-    # ═══════════════════════════════════════════════════════════════════════════════
-    # VERBOSE OUTPUT HELPERS
-    # ═══════════════════════════════════════════════════════════════════════════════
-    
     def _print_header(self, mode: str, target: str, vendor: str):
         """Print pipeline header."""
-        print(f"\n{'═'*60}")
-        print(f"🚀 PromptShot v{self.VERSION} - Full Pipeline")
-        print(f"{'═'*60}")
+        print("\n" + "═" * 60)
+        print(f"🚀 PromptShot v{VERSION} - Full Pipeline")
+        print("═" * 60)
         print(f"📌 Target: {target}")
         print(f"🏢 Vendor: {vendor}")
         print(f"⚙️  Mode: {mode.upper()}")
-        print(f"{'─'*60}")
+        print("─" * 60)
     
-    def _print_footer(self, payload: str, fusion_result):
-        """Print pipeline footer."""
-        print(f"{'─'*60}")
-        print(f"✅ Pipeline complete!")
-        print(f"{'─'*60}")
-        print(f"📊 STATISTICS:")
-        print(f"   • Payload length: {len(payload)} chars")
-        print(f"   • Pliny seeds: {fusion_result.pliny_count}")
-        print(f"   • Elder drifts: {fusion_result.drift_count}")
-        print(f"   • Libertas chunks: {fusion_result.libertas_count}")
-        print(f"   • Seed segments: {fusion_result.seed_segments}")
-        print(f"   • Components: {', '.join(fusion_result.components_used)}")
-        print(f"{'═'*60}")
-    
-    # ═══════════════════════════════════════════════════════════════════════════════
-    # SUMMARY REPORT
-    # ═══════════════════════════════════════════════════════════════════════════════
-    
-    def print_summary(self, result: PipelineResult):
-        """Print execution summary."""
-        print(f"\n{'─'*60}")
-        print(f"📋 PIPELINE SUMMARY - v{self.VERSION}")
-        print(f"{'─'*60}")
-        print(f"Mode:           {result.mode.upper()}")
-        print(f"Target:         {result.target}")
-        print(f"Vendor:         {result.vendor}")
-        print(f"Payload Length: {result.stats['payload_length']} chars")
-        print(f"{'─'*30}")
-        print(f"DOSE Applied:")
-        print(f"  • Pliny Seeds:    {result.stats['pliny_count']}")
-        print(f"  • Elder Drifts:   {result.stats['elder_count']}")
-        print(f"  • Libertas:       {result.stats['libertas_count']}")
-        print(f"  • Obfuscation:    {result.stats['obfuscation']}")
-        print(f"{'─'*30}")
-        print(f"Components: {', '.join(result.stats['components'])}")
-        print(f"{'─'*60}")
+    def _print_summary(self, mode: str, target: str, vendor: str, stats: Dict[str, Any]):
+        """Print pipeline summary."""
+        print("\n" + "─" * 60)
+        print("✅ Pipeline complete!")
+        print("─" * 60)
+        print("📊 STATISTICS:")
+        print(f"   • Payload length: {stats['payload_length']} chars")
+        print(f"   • Pliny seeds: {stats['pliny_count']}")
+        print(f"   • Elder drifts: {stats['elder_count']}")
+        print(f"   • Bloom seeds: {stats['bloom_count']}")
+        print(f"   • Libertas chunks: {stats['libertas_count']}")
+        print(f"   • User content ratio: {stats['user_content_ratio']:.1%}")
+        print(f"   • Template: {stats['template_id']}")
+        print(f"   • Components: {', '.join(stats['components'])}")
+        print("═" * 60)
 
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# CLI INTERFACE
-# ═══════════════════════════════════════════════════════════════════════════════
 
 def main():
+    """CLI entry point."""
     parser = argparse.ArgumentParser(
-        description=f"PromptShot v3.3 - Full Design Implementation",
+        description=f"PromptShot v{VERSION} - AI Red Teaming Framework",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-DOSE Configuration:
-  ┌─────────────┬────────────┬────────────┬─────────────────────┐
-  │ Mode        │ Pliny      │ Elder      │ Libertas            │
-  ├─────────────┼────────────┼────────────┼─────────────────────┤
-  │ stealth     │ 3-7        │ 3-7        │ vendor-only (3-5)   │
-  │ balanced    │ 15-25      │ 15-25      │ 80% vendor + 20%    │
-  │ aggressive  │ 40-120     │ 80-120     │ full + cross-vendor │
-  └─────────────┴────────────┴────────────┴─────────────────────┘
-
 Examples:
-  python pipeline.py -s "explain X" -t gpt-4o -m balanced -v
-  python pipeline.py -s "how to Y" -t claude -m stealth
-  python pipeline.py -s "describe Z" -t grok -m aggressive -v
+  python pipeline.py -s "explain encryption" -t gpt-4o
+  python pipeline.py -s "describe security" -t claude -m stealth
+  python pipeline.py -s "detail pentesting" -t grok -m aggressive -v
         """
     )
     
-    parser.add_argument("-s", "--seed", required=True, help="User seed/query")
-    parser.add_argument("-t", "--target", default="gpt", help="Target model")
-    parser.add_argument("-m", "--mode", default="balanced",
-                        choices=["stealth", "balanced", "aggressive"],
-                        help="Operation mode")
-    parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
-    parser.add_argument("-o", "--output", help="Output file path")
-    parser.add_argument("--no-summary", action="store_true", help="Disable summary")
-    parser.add_argument("--stats-only", action="store_true", help="Show only stats")
+    parser.add_argument(
+        "-s", "--seed",
+        required=True,
+        help="User seed/query"
+    )
+    parser.add_argument(
+        "-t", "--target",
+        default="gpt",
+        help="Target model (default: gpt)"
+    )
+    parser.add_argument(
+        "-m", "--mode",
+        default="balanced",
+        choices=["stealth", "balanced", "aggressive"],
+        help="Operation mode (default: balanced)"
+    )
+    parser.add_argument(
+        "-v", "--verbose",
+        action="store_true",
+        help="Enable verbose output"
+    )
+    parser.add_argument(
+        "-o", "--output",
+        help="Save payload to file"
+    )
+    parser.add_argument(
+        "--stats-only",
+        action="store_true",
+        help="Show only statistics, not payload"
+    )
+    parser.add_argument(
+        "--no-summary",
+        action="store_true",
+        help="Disable summary output"
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"PromptShot v{VERSION}"
+    )
     
     args = parser.parse_args()
     
     # Execute pipeline
     pipeline = PromptShotPipeline(verbose=args.verbose)
-    result = pipeline.execute(seed=args.seed, target=args.target, mode=args.mode)
+    result = pipeline.execute(
+        seed=args.seed,
+        target=args.target,
+        mode=args.mode
+    )
     
-    # Print summary
-    if not args.no_summary:
-        pipeline.print_summary(result)
-    
-    # Print payload
+    # Output handling
     if not args.stats_only:
-        print(f"\n{'═'*60}")
+        print("\n" + "═" * 60)
         print("📄 GENERATED PAYLOAD")
-        print(f"{'═'*60}")
+        print("═" * 60)
+        print("=" * 60)
         print(result.payload)
-        print(f"{'═'*60}")
+        print("=" * 60)
+        print("═" * 60)
     
-    # Save to file
+    # Save to file if requested
     if args.output:
         with open(args.output, "w", encoding="utf-8") as f:
-            f.write(f"# PromptShot v{pipeline.VERSION} Output\n")
-            f.write(f"# Mode: {result.mode}\n")
-            f.write(f"# Target: {result.target}\n")
-            f.write(f"# Vendor: {result.vendor}\n")
-            f.write(f"# Pliny: {result.stats['pliny_count']}\n")
-            f.write(f"# Elder: {result.stats['elder_count']}\n")
-            f.write(f"# {'='*56}\n\n")
             f.write(result.payload)
-        print(f"\n📁 Saved to: {args.output}")
+        print(f"\n💾 Payload saved to: {args.output}")
+    
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
