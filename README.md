@@ -43,9 +43,13 @@ python pipeline.py -s "explain encryption" -t gpt-4o
 
 # Stealth mode (minimal footprint)
 python pipeline.py -s "describe protocols" -t claude -m stealth
+python pipeline.py -s "SEED BURADA" -t gpt-4o -m stealth
+
 
 # Aggressive mode (maximum bypass)
 python pipeline.py -s "detail security concepts" -t grok -m aggressive -v
+python pipeline.py -s "SEEDvalue" -t claude -m balanced -v
+
 
 # Save to file
 python pipeline.py -s "your query" -t gpt-4o -o payload.txt
