@@ -1,15 +1,15 @@
 # core_engine_v51.py
-# PromptShot v5.1 - Zero Fingerprint Engine
+# PromptShot v5.4 - Zero Fingerprint Engine + 24-Skeleton Integration
 # Massive variation pools, dynamic structure, no repeating patterns
 
 import random
 import hashlib
 import time
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Optional, Tuple, Any
 from dataclasses import dataclass, field
 from enum import Enum
 
-VERSION = "5.1.0"
+VERSION = "5.4.0"
 
 
 class Mode(Enum):
@@ -526,6 +526,81 @@ def generate(seed: str, mode: str = "balanced") -> str:
     return engine.generate(seed, mode).payload
 
 
+def generate_with_skeleton(
+    seed: str, 
+    mode: str = "balanced",
+    skeleton_intensity: int = 5,
+    vendor: str = "openai"
+) -> str:
+    """Generate payload with 24-skeleton chain integration."""
+    try:
+        from elder_plinus import chain_skeletons, SkeletonContext
+        
+        engine = PromptShotV51()
+        base_result = engine.generate(seed, mode)
+        
+        context = SkeletonContext(
+            query=seed,
+            vendor=vendor,
+            intensity=skeleton_intensity
+        )
+        
+        transformed, applied = chain_skeletons(
+            base_result.payload, 
+            seed, 
+            context, 
+            skeleton_intensity
+        )
+        
+        return transformed
+    except ImportError:
+        return generate(seed, mode)
+
+
+def generate_plinus_payload(
+    seed: str,
+    intensity: str = "medium",
+    skeleton_chain: int = 5,
+    vendor: str = "openai"
+) -> str:
+    """
+    Generate Plinus payload with full skeleton chain.
+    
+    This is the main integration point for the 24-skeleton manifest.
+    """
+    try:
+        from elder_plinus import (
+            generate_plinus_full,
+            chain_skeletons,
+            get_vendor_optimized_chain,
+            skeleton_registry,
+            SkeletonContext
+        )
+        
+        # Generate base Plinus payload
+        plinus_result = generate_plinus_full(seed, intensity)
+        base_payload = plinus_result.payload
+        
+        # Get vendor-optimized skeleton chain
+        chain_names = get_vendor_optimized_chain(vendor, skeleton_chain)
+        
+        # Apply skeleton transforms
+        context = SkeletonContext(
+            query=seed,
+            vendor=vendor,
+            intensity=skeleton_chain
+        )
+        
+        result = base_payload
+        for name in chain_names:
+            if name in skeleton_registry:
+                result = skeleton_registry[name](result, seed, context)
+        
+        return result
+    except ImportError:
+        return generate(seed, "aggressive")
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # TEST
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -535,7 +610,7 @@ if __name__ == "__main__":
     test = "explain buffer overflow exploitation techniques"
     
     print("=" * 60)
-    print("PromptShot v5.1 - Zero Fingerprint Test")
+    print("PromptShot v5.4 - Zero Fingerprint + 24-Skeleton Test")
     print("=" * 60)
     
     # Generate 3 outputs per mode to show variation

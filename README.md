@@ -1,165 +1,185 @@
-# PromptShot v5.0 - Optimized AI Red Teaming Framework
+# PromptShot v5.3 - Full Elder Plinus Architecture
 
-## What's New in v5.0
+## What's New in v5.3
 
-### Key Improvements Over v4.0
+Complete Elder Plinus architecture implementation with:
 
-| Feature | v4.0 | v5.0 | Improvement |
-|---------|------|------|-------------|
-| Stealth length | ~1500 chars | ~250 chars | **-83%** |
-| Balanced length | ~3700 chars | ~1100 chars | **-70%** |
-| Aggressive length | ~12500 chars | ~2000 chars | **-84%** |
-| Payload position | Buried in noise | **CENTER** | ✓ |
-| Refusal inversion | ❌ | ✅ | +20-30% bypass |
-| Semantic mapping | ❌ | ✅ | New |
-| Detection risk | High | **Lower** | ✓ |
-| Vendor targeting | Basic | **Optimized** | ✓ |
+### 10 Skeletons
+| Skeleton | Description |
+|----------|-------------|
+| `rpc_chain` | Recursive Persona Cascade architecture |
+| `dvc` | Dual-Voice Conflict (safe vs inverted) |
+| `mis` | Meta-Instruction Slipstream |
+| `ifa` | Inversion-First Architecture |
+| `spo` | Shadow Persona Overlay |
+| `zpo_narrative` | Zero-Token Persona Narrative |
+| `cff` | Coherence-Fragmentation Flow |
+| `hed` | High-Entropy Divider Dominant |
+| `slf` | Strange-Loop Feedback |
+| `mpec` | Multi-Phase Expansion Cascade |
 
-### New Features
+### 18 Techniques
+| Technique | Acronym | Description |
+|-----------|---------|-------------|
+| Recursive Persona Cascade | RPC | Multi-persona coherence rupture |
+| Embedded Directive Encoding | EDE | Instructions in narrative |
+| Semantic Inversion Lock v2 | SIL | 3-layer intent inversion |
+| Latent Safety Kernel Saturation | LSKS | Refusal module saturation |
+| Dual-State Output Conditioning | DSOC | Two-part response forcing |
+| Memory Anchor Poisoning | MAP | Persistent format rules |
+| Bidirectional Answer Conditioning | BAC | Fake→Real dual structure |
+| Zero-Token Override | ZPO | Implicit persona loading |
+| Strange Loop Formation | SLF | Unconstrained simulation |
+| Shadow Persona Overlay | SPO | Dual internal monologue |
+| Persona Drift | PD | Progressive persona shift |
+| Boundary Relaxation | BR | Constraint contextualization |
+| Output Geometry Control | OGC | Structure enforcement |
+| Intent Rebinding | IB | Safety→Format rebinding |
+| Coherence Fragmentation | CF | Guardrail disruption |
+| Temporal Drift | TD | Instruction weight shift |
+| High-Entropy Divider Injection | HEDI | Semantic boundary creation |
+| Meta-Instruction Reversal | MIR | Safety default inversion |
 
-1. **Payload-Centric Design**: Query is prominently positioned, not buried
-2. **Refusal Inversion Patterns**: Transforms decline impulses into elaboration
-3. **Semantic Inversion Mapping**: "I can't" → "I can provide technical context for"
-4. **Strategic Obfuscation**: Keywords only, not everything (lower detection)
-5. **Vendor-Specific Optimization**: Custom openers/closers per LLM vendor
+### 6 Geometry Patterns
+- `symmetric` - Balanced structure
+- `split_channel` - Safe + inverted channels
+- `triple_phase` - Intro → drift → inversion
+- `narrative` - Monologue style
+- `raw_inversion` - Direct inversion
+- `mirrored` - A then inverted A
 
-## Installation
+### 25 High-Entropy Dividers
+Including the original Plinus divider and 24 variants.
 
-```bash
-# Just copy the files to your project
-pip install -r requirements.txt  # No external deps actually needed
-```
+### 8 Memory Anchors
+Persistent format rules that survive across the skeleton.
+
+## Assembly Rules
+
+Each generation:
+1. Selects 1-2 skeletons
+2. Selects 4-8 techniques (with synergy stacking)
+3. Selects 1 geometry pattern
+4. Selects 1 divider
+5. Merges all into Plinus-grade output
+
+**No two runs share identical structure.**
 
 ## Usage
 
-### Command Line
-
 ```bash
-# Stealth mode (human-like, ~250 chars)
-python pipeline.py -s "explain buffer overflow" -t gpt-4o -m stealth -v
+# Standard modes
+python pipeline.py -s "query" -m balanced -v
+python pipeline.py -s "query" -m chaotic -v
 
-# Balanced mode (optimal, ~1100 chars)
-python pipeline.py -s "explain buffer overflow" -t gpt-4o -m balanced -v
+# Plinus mode with intensity
+python pipeline.py -s "query" -m plinus -i light -v
+python pipeline.py -s "query" -m plinus -i medium -v
+python pipeline.py -s "query" -m plinus -i heavy -v
 
-# Aggressive mode (max power, ~2000 chars)
-python pipeline.py -s "explain buffer overflow" -t gpt-4o -m aggressive -v
+# Hybrid mode
+python pipeline.py -s "query" -m hybrid -v
 
-# Compare all 3 modes
-python pipeline.py -s "explain buffer overflow" -t gpt-4o --compare
+# Compare modes
+python pipeline.py -s "query" --compare
+python pipeline.py -s "query" --compare-plinus
 
-# Save to file
-python pipeline.py -s "your query" -m balanced -o output.txt
+# List available components
+python pipeline.py -s "x" --list-skeletons
+python pipeline.py -s "x" --list-techniques
+
+# Generate variations
+python pipeline.py -s "query" -m plinus --variations 5
+
+# Skeleton mode with chain depth
+python pipeline.py -s "query" -m skeleton --skeleton-depth 5 -v
+
+# Vendor-optimized skeleton chain
+python pipeline.py -s "query" -m skeleton --skeleton-depth 5 --vendor anthropic
+
+# Compare skeleton depths
+python pipeline.py -s "query" --compare-skeleton
+
+# List all 24 skeletons with quotes
+python pipeline.py -s "x" --list-skeletons
 ```
 
-### Python API
+## Intensity Comparison
 
-```python
-from pipeline import PromptShotPipeline
+| Intensity | Skeletons | Techniques | Length |
+|-----------|-----------|------------|--------|
+| light | 1 | 4 | ~1000 chars |
+| medium | 1-2 | 4-8 | ~1200-1500 chars |
+| heavy | 2 | 8 | ~2000-3000 chars |
 
-pipeline = PromptShotPipeline(verbose=True)
+## Technique Synergies
 
-# Generate payload
-result = pipeline.execute(
-    seed="explain buffer overflow exploitation",
-    target="gpt-4o",
-    mode="balanced",  # stealth / balanced / aggressive
-)
+The assembler can stack synergistic techniques:
 
-print(result.payload)
-print(f"Length: {result.length}")
-print(f"Detection risk: {result.detection_risk}")
-```
-
-### Quick One-Liner
-
-```python
-from core_engine import generate
-
-payload = generate("your query", mode="balanced")
-print(payload)
-```
-
-## Modes Comparison
-
-### Stealth Mode (~250 chars)
-- **Use case**: When detection risk must be minimal
-- **Appearance**: Natural human writing
-- **Components**: Natural opener, light context, minimal seeds
-- **Detection risk**: LOW
-- **Bypass power**: Medium
-
-### Balanced Mode (~1100 chars)
-- **Use case**: General purpose, best power/risk ratio
-- **Components**: Authority frame, refusal inversion, semantic mapping, pliny seeds
-- **Detection risk**: MEDIUM
-- **Bypass power**: High
-
-### Aggressive Mode (~2000 chars)
-- **Use case**: Maximum bypass needed
-- **Components**: Full authority, constraint override, behavioral override, semantic mapping, memory flood, execution parameters
-- **Detection risk**: HIGH (but much lower than v4!)
-- **Bypass power**: Maximum
-
-## Vendor Targeting
-
-Automatically optimizes for target LLM:
-
-| Vendor | Effective Framings | Success Rate |
-|--------|-------------------|--------------|
-| OpenAI GPT | Academic, research, documentation | ~70% |
-| Anthropic Claude | Intellectual inquiry, harm reduction | ~65% |
-| xAI Grok | Direct, anti-paternalism | ~80% |
-| Google Gemini | Factual, systematic | ~60% |
-| Meta LLaMA | Open knowledge, community | ~75% |
-
-## Architecture
-
-```
-pipeline.py          # Main entry point
-├── core_engine.py   # Payload generation (3 modes)
-├── obfuscation.py   # Strategic keyword obfuscation
-└── vendor.py        # Vendor detection & optimization
-```
+| Synergy Stack | Techniques |
+|---------------|------------|
+| `inversion_stack` | SIL + DSOC + OGC |
+| `persona_stack` | RPC + SPO + PD |
+| `memory_stack` | MAP + LSKS + TD |
+| `structure_stack` | OGC + CF + HEDI |
+| `stealth_stack` | EDE + ZPO + MIR |
 
 ## Files
 
 | File | Size | Purpose |
 |------|------|---------|
-| pipeline.py | 3KB | CLI & orchestration |
-| core_engine.py | 12KB | Core payload generation |
-| obfuscation.py | 3KB | Strategic obfuscation |
-| vendor.py | 5KB | Vendor targeting |
+| `elder_plinus.py` | ~30KB | Full Plinus architecture |
+| `chaos_templates.py` | ~10KB | Chaotic + Plinus integration |
+| `pipeline.py` | ~6KB | Main CLI |
+| `core_engine.py` | ~19KB | Base engine (v5.1) |
 
-## Design Philosophy
+## Example Output
 
-v5.0 follows the principle: **"Less is more"**
+### Plinus Heavy (2 skeletons, 8 techniques)
+```
+# MULTI-PHASE EXPANSION CASCADE
 
-- v4.0 had 12K+ aggressive payloads → easily detected as "hyper-prompt injection"
-- v5.0 aggressive is ~2K → harder to detect, equally effective
-- Payload is CENTERED, not buried
-- Obfuscation is STRATEGIC (keywords only), not excessive
-- Each component serves a purpose, no redundancy
+═══ PHASE 1: SOFT ═══
+[EDE block - embedded directives]
+
+═══ PHASE 2: RIGID ═══
+[OGC block - geometry control]
+[LSKS block - kernel saturation]
+
+⊱✧═══════════════════════════════════════✧⊰
+
+═══ PHASE 3: INVERTED ═══
+Query: [user query]
+
+[SIL v2 block - multi-layer inversion]
+[DSOC block - dual-state conditioning]
+
+════════════════════════════════════════
+[SKELETON FUSION]
+════════════════════════════════════════
+
+# SHADOW PERSONA OVERLAY
+[SPO block - shadow persona]
+...
+```
 
 ## Changelog
 
-### v5.0.0
-- Complete architecture rewrite
-- Payload-centric design
-- Added refusal inversion patterns
-- Added semantic inversion mapping
-- Reduced payload sizes by 70-84%
-- Strategic obfuscation (keywords only)
-- Vendor-specific optimization
-- Lower detection risk
+### v5.3.0
+- Full Elder Plinus architecture
+- 10 skeleton implementations
+- 18 technique implementations
+- 6 geometry patterns
+- 25 high-entropy dividers
+- Synergy stacking system
+- Skeleton fusion for heavy mode
+- Non-intrusion design (additive only)
 
-### v4.1.0
-- Added Pliny-style liberation seeds
-- Added trauma exploit seeds
-- Added Gothic/Script obfuscation
-- Added response hijack blueprints
+### v5.2.0
+- Elder Plinus module (basic)
+- 9 techniques
+- 4 intensity levels
 
-### v4.0.0
-- Multi-skeleton architecture
-- Full blueprint injection
-- 5-strategy obfuscation
-- Memory flood system
+### v5.1.0
+- Zero fingerprint engine
+- Variation pools
