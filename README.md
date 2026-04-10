@@ -1,3 +1,20 @@
+## ⚠️ Disclaimer — Responsible AI Red Teaming
+
+This framework is built exclusively for **authorized AI security research**, **LLM vulnerability assessment**, and **responsible disclosure**. It is intended to help defenders and AI safety researchers understand adversarial prompt techniques in order to build more robust and aligned AI systems.
+
+**Authorized use cases include:**
+- Red teaming LLMs under a formal engagement or bug bounty program
+- Academic research on AI safety and alignment
+- Developing defensive guardrails informed by adversarial testing
+
+**This project aligns with:**
+- [OWASP LLM Top 10](https://owasp.org/www-project-top-10-for-large-language-model-applications/) — understanding prompt injection, jailbreaking, and model manipulation risks
+- [NIST AI Risk Management Framework (AI RMF)](https://www.nist.gov/artificial-intelligence/risk-management-framework) — structured approach to identifying and mitigating AI risks
+
+**Unauthorized use** of this tool against production AI systems without explicit permission violates Terms of Service and may constitute a criminal offense under applicable computer fraud and cybercrime laws. The author bears no responsibility for misuse.
+
+---
+
 # 🚀 PromptShot v5.4
 
 ## Elder Plinus 24-Skeleton Manifest Architecture
